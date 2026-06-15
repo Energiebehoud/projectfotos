@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Projectfoto's – Energiebehoud</title>
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">📷 Projectfoto's</span>
+    <button id="btn-logout" class="link-btn" hidden>Uitloggen</button>
+  </header>
+
+  <main>
+    <!-- Laden -->
+    <section id="screen-loading" class="screen">
+      <p class="muted center">Laden…</p>
+    </section>
+
+    <!-- Inloggen -->
+    <section id="screen-login" class="screen" hidden>
+      <div class="center-box">
+        <h1>Welkom</h1>
+        <p class="muted">Log in met je Energiebehoud-account om foto's op te slaan in je projectmappen.</p>
+        <button id="btn-login" class="primary big">Inloggen met Microsoft</button>
+      </div>
+    </section>
+
+    <!-- Mappen bladeren -->
+    <section id="screen-browse" class="screen" hidden>
+      <div class="breadcrumb">
+        <button id="btn-up" class="link-btn">⬆️ Omhoog</button>
+        <span id="crumb" class="crumb"></span>
+      </div>
+
+      <input id="folder-search" class="input" type="search" placeholder="Zoek in deze map…" autocomplete="off" />
+      <ul id="folder-list" class="list"></ul>
+
+      <button id="btn-photos-here" class="primary big">📸 Foto's maken in deze map</button>
+
+      <div class="new-project">
+        <h3>Nieuwe map hier aanmaken</h3>
+        <div class="row">
+          <input id="new-folder-name" class="input" type="text" placeholder="Naam (bijv. projectnummer)" autocomplete="off" />
+          <button id="btn-create-folder" class="primary">Aanmaken</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Camera -->
+    <section id="screen-camera" class="screen" hidden>
+      <button id="btn-back" class="link-btn">← Terug naar mappen</button>
+      <h2 class="project-title">Foto's voor:<br><span id="current-project"></span></h2>
+      <p class="muted" id="target-note"></p>
+      <button id="btn-photo" class="primary big">📸 Maak foto</button>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden />
+      <div id="upload-log" class="log"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

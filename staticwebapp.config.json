@@ -1,0 +1,12 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/css/*", "/js/*", "/icons/*", "/sw.js", "*.webmanifest"]
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  },
+  "globalHeaders": {
+    "Service-Worker-Allowed": "/"
+  }
+}
