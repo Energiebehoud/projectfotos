@@ -256,7 +256,7 @@ button {
   max-width: 340px;
 }
 
-/* Foto-details (omschrijving, afmeting, locatie) */
+/* Foto-details (omschrijving, locatie) */
 .capture-meta { margin-bottom: 12px; }
 .loc-status {
   font-size: .9rem;
@@ -265,7 +265,3 @@ button {
   min-height: 1.2em;
   word-break: break-word;
 }
-.dims { align-items: center; }
-.dims .input { margin-bottom: 0; }
-.dims-x { color: var(--muted); font-weight: 600; }
-.unit { max-width: 84px; flex: 0 0 auto; }

@@ -137,8 +137,6 @@ $("#btn-photos-here").addEventListener("click", () => {
     : `Opslaan in:  ${targetFolder.name}`;
   $("#upload-log").innerHTML = "";
   $("#meta-label").value = "";
-  $("#meta-w").value = "";
-  $("#meta-h").value = "";
   show("camera");
   startCamera();
   fetchLocation();
@@ -267,9 +265,6 @@ function buildFilename(folderName) {
   const parts = [stamp, sanitize(folderName) || "foto"];
   const label = sanitize($("#meta-label").value);
   if (label) parts.push(label);
-  const w = $("#meta-w").value.trim();
-  const h = $("#meta-h").value.trim();
-  if (w && h) parts.push(`${w}x${h}${$("#meta-unit").value}`);
   if (currentAddress) parts.push(currentAddress);
   parts.push(Math.random().toString(36).slice(2, 5)); // uniek bij snelle reeks
   return parts.join("_") + ".jpg";
