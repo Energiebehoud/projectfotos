@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Projectfoto's – Energiebehoud</title>
-  <meta name="theme-color" content="#0f766e" />
+  <meta name="theme-color" content="#2ca74b" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">📷 Projectfoto's</span>
+    <span class="brand"><img class="brand-mark" src="img/logo-mark-white.svg" alt="" /> Projectfoto's</span>
     <button id="btn-logout" class="link-btn" hidden>Uitloggen</button>
   </header>
 
@@ -23,9 +23,11 @@
 
     <!-- Inloggen -->
     <section id="screen-login" class="screen" hidden>
-      <div class="center-box">
-        <h1>Welkom</h1>
-        <p class="muted">Log in met je Energiebehoud-account om foto's op te slaan in je projectmappen.</p>
+      <div class="login-card">
+        <img class="login-logo" src="img/logo.png" alt="Energiebehoud – Energielabels & verduurzaming" />
+        <p class="login-exclusive">🔒 Deze app is exclusief voor Energiebehoud BV</p>
+        <h1 class="login-title">Projectfoto's</h1>
+        <p class="muted login-sub">Log in met je Energiebehoud-account om foto's direct in de juiste projectmap op te slaan.</p>
         <button id="btn-login" class="primary big">Inloggen met Microsoft</button>
       </div>
     </section>
@@ -56,8 +58,34 @@
       <button id="btn-back" class="link-btn">← Terug naar mappen</button>
       <h2 class="project-title">Foto's voor:<br><span id="current-project"></span></h2>
       <p class="muted" id="target-note"></p>
-      <button id="btn-photo" class="primary big">📸 Maak foto</button>
-      <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden />
+
+      <!-- Foto-details: omschrijving, afmeting, locatie -->
+      <div class="capture-meta">
+        <div class="loc-status" id="loc-status"></div>
+        <input id="meta-label" class="input" type="text" placeholder="Omschrijving / raamnr. (bijv. raam1)" autocomplete="off" />
+        <div class="row dims">
+          <input id="meta-w" class="input" type="number" inputmode="numeric" placeholder="Breedte" />
+          <span class="dims-x">×</span>
+          <input id="meta-h" class="input" type="number" inputmode="numeric" placeholder="Hoogte" />
+          <select id="meta-unit" class="input unit">
+            <option value="cm" selected>cm</option>
+            <option value="mm">mm</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Live camera (ingebouwd) -->
+      <div id="cam-wrap" class="cam-wrap" hidden>
+        <video id="cam-preview" playsinline autoplay muted></video>
+        <div id="cam-flash" class="cam-flash"></div>
+      </div>
+      <button id="btn-shutter" class="primary big" hidden>📸 Foto maken</button>
+      <p id="cam-hint" class="muted center" hidden>Tik telkens om een foto te maken — ze worden direct opgeslagen. Je blijft in de zoeker.</p>
+
+      <!-- Alternatief: camera-app / galerij van het apparaat -->
+      <button id="btn-photo" class="secondary big">📁 Camera-app / galerij gebruiken</button>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple hidden />
+
       <div id="upload-log" class="log"></div>
     </section>
   </main>

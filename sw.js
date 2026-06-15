@@ -1,6 +1,6 @@
 // Eenvoudige service worker: network-first voor onze eigen bestanden,
 // met cache als terugval (zodat de app ook offline opent).
-const CACHE = "projectfotos-v1";
+const CACHE = "projectfotos-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +12,8 @@ const ASSETS = [
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./img/logo.png",
+  "./img/logo-mark-white.svg",
 ];
 
 self.addEventListener("install", (e) => {

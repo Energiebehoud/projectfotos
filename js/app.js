@@ -19,10 +19,13 @@ let stack = [];           // [{id,name}] van hoofdmap t/m huidige map
 let currentFolders = [];  // submappen van de huidige map
 let targetFolder = null;  // map gekozen om foto's in te maken
 let photoTargetId = null; // gecachete id van de foto-submap
+let mediaStream = null;   // actieve camerastream (ingebouwde camera)
+let currentAddress = "";  // adres uit GPS (PDOK), voor in de bestandsnaam
 
 const current = () => stack[stack.length - 1];
 const escapeHtml = (s) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sanitize = (s) => String(s).replace(/[^a-zA-Z0-9-_ ]/g, "").trim().replace(/\s+/g, "-");
 
 // ---- Opstarten -------------------------------------------------------------
 async function boot() {
@@ -133,26 +136,143 @@ $("#btn-photos-here").addEventListener("click", () => {
     ? `Opslaan in:  ${targetFolder.name}  ›  ${config.photoSubfolder}`
     : `Opslaan in:  ${targetFolder.name}`;
   $("#upload-log").innerHTML = "";
+  $("#meta-label").value = "";
+  $("#meta-w").value = "";
+  $("#meta-h").value = "";
   show("camera");
+  startCamera();
+  fetchLocation();
 });
 
-$("#btn-back").addEventListener("click", () => show("browse"));
+$("#btn-back").addEventListener("click", () => {
+  stopCamera();
+  show("browse");
+});
+
+// ---- Ingebouwde camera (live zoeker, meerdere foto's achter elkaar) --------
+async function startCamera() {
+  const wrap = $("#cam-wrap");
+  const video = $("#cam-preview");
+  const shutter = $("#btn-shutter");
+  const hint = $("#cam-hint");
+  const altBtn = $("#btn-photo");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return fallbackToFilePicker();
+  }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 4096 },
+        height: { ideal: 2160 },
+      },
+      audio: false,
+    });
+    video.srcObject = mediaStream;
+    await video.play().catch(() => {});
+    wrap.hidden = false;
+    shutter.hidden = false;
+    hint.hidden = false;
+    // De apparaat-camera/galerij wordt het secundaire (alternatieve) knopje.
+    altBtn.className = "secondary big";
+    altBtn.textContent = "📁 Camera-app / galerij gebruiken";
+  } catch (e) {
+    // Geen toegang of niet ondersteund -> terugvallen op de camera-app.
+    fallbackToFilePicker();
+  }
+}
+
+function fallbackToFilePicker() {
+  $("#cam-wrap").hidden = true;
+  $("#btn-shutter").hidden = true;
+  $("#cam-hint").hidden = true;
+  const altBtn = $("#btn-photo");
+  altBtn.className = "primary big";
+  altBtn.textContent = "📸 Maak foto";
+}
+
+function stopCamera() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((t) => t.stop());
+    mediaStream = null;
+  }
+  $("#cam-preview").srcObject = null;
+}
+
+// Locatie ophalen en via PDOK omzetten naar een adres (voor in de bestandsnaam).
+async function fetchLocation() {
+  const statusEl = $("#loc-status");
+  currentAddress = "";
+  if (!navigator.geolocation) {
+    statusEl.textContent = "📍 locatie niet beschikbaar";
+    return;
+  }
+  statusEl.textContent = "📍 locatie ophalen…";
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      try {
+        const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/reverse?lat=${lat}&lon=${lon}&rows=1&type=adres`;
+        const data = await (await fetch(url)).json();
+        const doc = data && data.response && data.response.docs && data.response.docs[0];
+        if (doc && doc.weergavenaam) {
+          currentAddress = sanitize(doc.weergavenaam.split(",")[0]); // "Straat 61"
+          statusEl.textContent = `📍 ${doc.weergavenaam}`;
+          return;
+        }
+      } catch (e) { /* val terug op coördinaten */ }
+      currentAddress = `${lat.toFixed(5)}-${lon.toFixed(5)}`;
+      statusEl.textContent = `📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    },
+    () => { currentAddress = ""; statusEl.textContent = "📍 locatie niet beschikbaar"; },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function flash() {
+  const f = $("#cam-flash");
+  f.classList.remove("go");
+  void f.offsetWidth; // forceer herstart van de animatie
+  f.classList.add("go");
+}
+
+$("#btn-shutter").addEventListener("click", () => {
+  const video = $("#cam-preview");
+  if (!video.videoWidth) return;
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+  flash();
+  canvas.toBlob((blob) => { if (blob) handlePhoto(blob); }, "image/jpeg", 0.92);
+});
+
+// ---- Apparaat-camera / galerij (alternatief, ondersteunt meerdere) ---------
 $("#btn-photo").addEventListener("click", () => $("#cameraInput").click());
 
 $("#cameraInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  e.target.value = ""; // reset zodat je opnieuw kunt fotograferen
-  if (file) await handlePhoto(file);
+  const files = Array.from(e.target.files || []);
+  e.target.value = ""; // reset zodat je opnieuw kunt kiezen
+  for (const file of files) await handlePhoto(file);
 });
 
+// ---- Uploaden --------------------------------------------------------------
 function buildFilename(folderName) {
   const d = new Date();
   const p = (n) => String(n).padStart(2, "0");
   const stamp =
     `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` +
     `_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
-  const safe = folderName.replace(/[^a-zA-Z0-9-_ ]/g, "").trim().replace(/\s+/g, "-") || "foto";
-  return `${stamp}_${safe}.jpg`;
+  const parts = [stamp, sanitize(folderName) || "foto"];
+  const label = sanitize($("#meta-label").value);
+  if (label) parts.push(label);
+  const w = $("#meta-w").value.trim();
+  const h = $("#meta-h").value.trim();
+  if (w && h) parts.push(`${w}x${h}${$("#meta-unit").value}`);
+  if (currentAddress) parts.push(currentAddress);
+  parts.push(Math.random().toString(36).slice(2, 5)); // uniek bij snelle reeks
+  return parts.join("_") + ".jpg";
 }
 
 async function handlePhoto(file) {
