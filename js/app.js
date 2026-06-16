@@ -27,6 +27,16 @@ const escapeHtml = (s) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sanitize = (s) => String(s).replace(/[^a-zA-Z0-9-_ ]/g, "").trim().replace(/\s+/g, "-");
 
+// Favoriete startmap (per apparaat in de browser opgeslagen): pad van namen vanaf de hoofdmap.
+const FAV_KEY = "pf_favorite_path";
+const getFavorite = () => { try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); } catch { return []; } };
+const setFavorite = (pathNames) => localStorage.setItem(FAV_KEY, JSON.stringify(pathNames));
+const currentPath = () => stack.slice(1).map((s) => s.name);
+const isCurrentFavorite = () => {
+  const fav = getFavorite(), path = currentPath();
+  return fav.length > 0 && fav.length === path.length && fav.every((n, i) => n === path[i]);
+};
+
 // ---- Opstarten -------------------------------------------------------------
 async function boot() {
   show("loading");
@@ -56,6 +66,13 @@ async function openRoot() {
   try {
     const root = await getRootFolder();
     stack = [root];
+    // Ga, indien ingesteld, direct naar de favoriete startmap.
+    for (const name of getFavorite()) {
+      const kids = await listFolders(current().id);
+      const match = kids.find((k) => k.name === name);
+      if (!match) break; // startmap niet (meer) gevonden -> stop waar we zijn
+      stack.push(match);
+    }
     await refresh();
   } catch (e) {
     setListError(`Kon de hoofdmap niet openen: ${e.message}`);
@@ -64,6 +81,7 @@ async function openRoot() {
 
 async function refresh() {
   renderCrumb();
+  updateFavButton();
   setListMessage("Mappen laden…");
   try {
     currentFolders = await listFolders(current().id);
@@ -76,6 +94,18 @@ async function refresh() {
 function renderCrumb() {
   $("#crumb").textContent = stack.map((s) => s.name).join("  ›  ");
   $("#btn-up").style.visibility = stack.length > 1 ? "visible" : "hidden";
+}
+
+function updateFavButton() {
+  const btn = $("#btn-fav");
+  if (!btn) return;
+  if (isCurrentFavorite()) {
+    btn.textContent = "★ Dit is je startmap — tik om te wissen";
+    btn.classList.add("is-fav");
+  } else {
+    btn.textContent = "☆ Maak deze map de startmap";
+    btn.classList.remove("is-fav");
+  }
 }
 
 function renderFolders(filter) {
@@ -108,6 +138,15 @@ $("#btn-up").addEventListener("click", () => {
 });
 
 $("#folder-search").addEventListener("input", (e) => renderFolders(e.target.value));
+
+$("#btn-fav").addEventListener("click", () => {
+  if (isCurrentFavorite()) {
+    setFavorite([]); // wissen -> voortaan starten op de hoofdmap
+  } else {
+    setFavorite(currentPath()); // huidige map als startmap
+  }
+  updateFavButton();
+});
 
 $("#btn-create-folder").addEventListener("click", async () => {
   const input = $("#new-folder-name");
