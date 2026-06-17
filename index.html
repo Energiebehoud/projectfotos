@@ -59,16 +59,8 @@
     <!-- Camera -->
     <section id="screen-camera" class="screen" hidden>
       <button id="btn-back" class="link-btn">← Terug naar mappen</button>
-      <h2 class="project-title">Foto's voor:<br><span id="current-project"></span></h2>
-      <p class="muted" id="target-note"></p>
 
-      <!-- Foto-details: omschrijving, afmeting, locatie -->
-      <div class="capture-meta">
-        <div class="loc-status" id="loc-status"></div>
-        <input id="meta-label" class="input" type="text" placeholder="Omschrijving / raamnr. (bijv. raam1)" autocomplete="off" />
-      </div>
-
-      <!-- Live camera (ingebouwd) -->
+      <!-- 1) Foto-scherm (camera) bovenaan -->
       <div id="cam-wrap" class="cam-wrap" hidden>
         <video id="cam-preview" playsinline autoplay muted></video>
         <div id="cam-flash" class="cam-flash"></div>
@@ -76,7 +68,14 @@
       <button id="btn-shutter" class="primary big" hidden>📸 Foto maken</button>
       <p id="cam-hint" class="muted center" hidden>Tik telkens om een foto te maken — ze worden direct opgeslagen. Je blijft in de zoeker.</p>
 
-      <!-- Alternatief: camera-app / galerij van het apparaat -->
+      <!-- 2) Omschrijving -->
+      <input id="meta-label" class="input" type="text" placeholder="Omschrijving / raamnr. (bijv. raam1)" autocomplete="off" />
+
+      <!-- 3) De rest: info, alternatieve camera en log -->
+      <h2 class="project-title">Foto's voor:<br><span id="current-project"></span></h2>
+      <p class="muted" id="target-note"></p>
+      <div class="loc-status" id="loc-status"></div>
+
       <button id="btn-photo" class="secondary big">📁 Camera-app / galerij gebruiken</button>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple hidden />
 

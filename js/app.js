@@ -171,8 +171,10 @@ $("#btn-photos-here").addEventListener("click", () => {
   targetFolder = current();
   photoTargetId = null;
   $("#current-project").textContent = targetFolder.name;
-  $("#target-note").textContent = config.photoSubfolder
-    ? `Opslaan in:  ${targetFolder.name}  ›  ${config.photoSubfolder}`
+  const sub = (config.photoSubfolder || "").trim();
+  const willNest = sub && targetFolder.name.trim().toLowerCase() !== sub.toLowerCase();
+  $("#target-note").textContent = willNest
+    ? `Opslaan in:  ${targetFolder.name}  ›  ${sub}`
     : `Opslaan in:  ${targetFolder.name}`;
   $("#upload-log").innerHTML = "";
   $("#meta-label").value = "";
@@ -318,7 +320,11 @@ async function handlePhoto(file) {
   log.prepend(entry);
   try {
     if (photoTargetId === null) {
-      photoTargetId = await ensurePhotoFolder(targetFolder.id);
+      const sub = (config.photoSubfolder || "").trim();
+      // Al in de foto-submap? Dan niet nóg een keer nesten.
+      photoTargetId = sub && targetFolder.name.trim().toLowerCase() === sub.toLowerCase()
+        ? targetFolder.id
+        : await ensurePhotoFolder(targetFolder.id);
     }
     await uploadPhoto(photoTargetId, filename, file, (pct) => {
       entry.textContent = `Uploaden ${filename}… ${pct}%`;
